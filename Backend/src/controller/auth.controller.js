@@ -225,3 +225,69 @@ export const getme = async (req, res) => {
     })
 
 }
+
+export const resendVerifyEmail = async (req , res) =>{
+    const {email} = req.email
+
+    const user = await userModel.findOne({email})
+
+    if(!user){
+        return res.status(400).json({
+            message: 'invalid email',
+            success: false,
+            err: 'user not found'
+        })
+    }
+    if(user.verified){
+        return res.status(400).json({
+            message: 'email already verified',
+            success: false,
+            err: 'email already verified'
+        })
+    }
+    
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET,)
+
+  await user.save() 
+
+    const verifyUrl = `http://localhost:3000/api/auth/verify-email?token=${token}`
+
+    await sendEmail(
+        email,
+        "Welcome to TalkAI",
+        `Hi ${user.username},\n\nPlease verify your email to continue using TalkAI.`,
+        `
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <p>Hi <strong>${user.username}</strong>,</p>
+  <p>Thank you for registering at <strong>TalkAI</strong>.</p>
+
+  <p>Please verify your email to activate your account:</p>
+
+  <a href="${verifyUrl}" 
+     style="
+       display: inline-block;
+       padding: 10px 20px;
+       margin: 15px 0;
+       font-size: 16px;
+       color: #fff;
+       background-color: #4CAF50;
+       text-decoration: none;
+       border-radius: 5px;
+     ">
+     Verify Email
+  </a>
+
+  <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+  <p>${verifyUrl}</p>
+
+  <p>Best regards,<br />The TalkAI Team</p>
+</div>
+`
+    );
+
+    res.status(200).json({
+        message: 'Verification email resent successfully',
+        success: true,
+    })
+
+}
