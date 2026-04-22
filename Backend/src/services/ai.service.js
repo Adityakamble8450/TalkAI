@@ -80,4 +80,4 @@ export const main = async () => {
 };
 
 // Run the main function
-main().catch(console.error).finally(() => rl.close());
+// main().catch(console.error).finally(() => rl.close());

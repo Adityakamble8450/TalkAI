@@ -1,14 +1,22 @@
 import express from "express";
 import cors from "cors";
 import router from "./routes/auth.routes.js";
-import cookieparser from 'cookie-parser'
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
 
 const app = express();
 
-app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieparser())
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+app.use(morgan("dev"));
 
 app.use("/api/auth", router);
 

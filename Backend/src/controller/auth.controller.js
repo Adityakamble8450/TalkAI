@@ -153,55 +153,60 @@ export const verifyEmail = async (req, res) => {
 }
 
 export const userLogin = async (req, res) => {
+  const { email, password } = req.body;
 
-    const { email, password } = req.body;
+  const user = await userModel.findOne({ email });
 
-    const user = await userModel.findOne({ email })
+  if (!user) {
+    return res.status(400).json({
+      message: "invalid email or password",
+      success: false,
+    });
+  }
 
-    if (!user) {
-        res.status(400).json({
-            message: "invalid email or password",
-            success: false,
-        })
-    }
+  const compareHashPass = await bcrypt.compare(password, user.password);
 
-    const compareHashPass = bcrypt.compare(password, user.password)
+  if (!compareHashPass) {
+    return res.status(400).json({
+      message: "invalid email or password",
+      success: false,
+    });
+  }
 
-    if (!compareHashPass) {
-        res.status(400).json({
-            message: 'invalid email or password',
-            success: false
-        })
-    }
+  if (!user.verified) {
+    return res.status(400).json({
+      message: "please verify your email first",
+      success: false,
+      err: "email is not verified",
+    });
+  }
 
-    if (!user.verified) {
-        res.status(400).json({
-            message: 'please verify your email first',
-            success: false,
-            err: 'email is not verified'
+  const token = jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "3d" }
+  );
 
-        })
-    }
-    const token = jwt.sign({
-        id: user._id,
-        email: email
-    }, process.env.JWT_SECRET, { expiresIn: '3d' })
+  res.cookie("token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    maxAge: 3 * 24 * 60 * 60 * 1000,
+  });
 
-
-    res.cookie(token)
-
-    res.status(201).json({
-        message: 'login succesfully',
-        success: true,
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email
-        }
-    })
-
-
-}
+  return res.status(200).json({
+    message: "login succesfully",
+    success: true,
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    },
+  });
+};
 
 export const getme = async (req, res) => {
 
