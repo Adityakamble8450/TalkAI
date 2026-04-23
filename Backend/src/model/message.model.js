@@ -2,28 +2,25 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
+    chat: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "chat",
+      required: true,
+    },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
-    },
-    receiverId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      default: null,
     },
     text: {
       type: String,
       required: true,
       trim: true,
     },
-    image: {
+    role: {
       type: String,
-      default: "",
-    },
-    isSeen: {
-      type: Boolean,
-      default: false,
+      enum: ["user", "assistant"],
+      required: true,
     },
   },
   {

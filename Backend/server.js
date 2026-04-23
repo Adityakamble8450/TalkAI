@@ -1,18 +1,18 @@
 import "dotenv/config";
+import http from "http";
 import app from "./src/app.js";
 import connectDb from "./src/config/database.js";
-import { main } from "./src/services/ai.service.js";
+
+import { initSocketServer } from "./src/sockets/server.socket.js";
 
 const PORT = process.env.PORT || 5000;
 
+await connectDb();
 
-  await connectDb();
-
+const server = http.createServer(app);
+initSocketServer(server);
 
 // main()
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-
-    
-
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
