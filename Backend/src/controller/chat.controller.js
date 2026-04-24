@@ -34,7 +34,16 @@ export const sendMessage = async (req, res) => {
             message: "Message sent successfully",
             title,
             chat,
-            aiResponse
+            messages :{
+                text: message,
+                chatId: chat._id,
+                role: "user"
+            } ,
+            aiResponse :{
+                text: aiResponse,
+                chatId: chat._id,
+                role: "assistant"
+            }
         });
 
     } catch (error) {
