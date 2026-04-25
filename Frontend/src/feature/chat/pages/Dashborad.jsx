@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { useSelector } from "react-redux";
 import { useChat } from "../hooks/Usechat";
 
@@ -97,6 +98,68 @@ const formatMessageTime = (date) => {
   }).format(new Date(date));
 };
 
+const MarkdownResponse = ({ children }) => (
+  <ReactMarkdown
+    components={{
+      h1: ({ children }) => (
+        <h1 className="text-xl font-semibold text-white mt-1 mb-3">{children}</h1>
+      ),
+      h2: ({ children }) => (
+        <h2 className="text-lg font-semibold text-white mt-4 mb-2">{children}</h2>
+      ),
+      h3: ({ children }) => (
+        <h3 className="text-base font-semibold text-white mt-3 mb-2">{children}</h3>
+      ),
+      p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+      ul: ({ children }) => (
+        <ul className="list-disc pl-5 mb-3 space-y-1 marker:text-purple-400">{children}</ul>
+      ),
+      ol: ({ children }) => (
+        <ol className="list-decimal pl-5 mb-3 space-y-1 marker:text-purple-400">{children}</ol>
+      ),
+      li: ({ children }) => <li className="pl-1">{children}</li>,
+      strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+      em: ({ children }) => <em className="text-gray-200">{children}</em>,
+      a: ({ href, children }) => (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="text-purple-300 underline decoration-purple-400/50 underline-offset-4 hover:text-purple-200"
+        >
+          {children}
+        </a>
+      ),
+      blockquote: ({ children }) => (
+        <blockquote className="border-l-2 border-purple-400/60 pl-4 my-3 text-gray-400">
+          {children}
+        </blockquote>
+      ),
+      code: ({ className, children }) => {
+        const isBlock = className?.includes("language-");
+
+        if (!isBlock) {
+          return (
+            <code className="rounded bg-white/10 px-1.5 py-0.5 text-[0.9em] text-purple-100">
+              {children}
+            </code>
+          );
+        }
+
+        return (
+          <code className="block overflow-x-auto rounded-lg bg-black/35 p-3 text-xs leading-relaxed text-gray-100">
+            {children}
+          </code>
+        );
+      },
+      pre: ({ children }) => <pre className="my-3 overflow-x-auto">{children}</pre>,
+      hr: () => <hr className="my-4 border-white/10" />,
+    }}
+  >
+    {children}
+  </ReactMarkdown>
+);
+
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { chats, currentChatId, error, isLoading } = useSelector((state) => state.chat);
@@ -128,7 +191,9 @@ const Dashboard = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, isLoading]);
 
-  const initials = user?.name
+  const displayName = user?.name || user?.username || user?.email?.split("@")[0] || "User";
+
+  const initials = displayName
     ?.split(" ")
     .map((name) => name[0])
     .join("")
@@ -150,7 +215,7 @@ const Dashboard = () => {
     <div
       className="flex h-screen w-screen overflow-hidden font-sans antialiased"
       style={{
-        background: "#0e0e12",
+        background: "#06070b",
         fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
       }}
     >
@@ -158,7 +223,7 @@ const Dashboard = () => {
         className={`flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out border-r border-white/[0.06] ${
           sidebarOpen ? "w-72" : "w-0 overflow-hidden"
         }`}
-        style={{ background: "#13131a" }}
+        style={{ background: "#090a10" }}
       >
         <div className="flex items-center justify-between px-5 py-5">
           <div className="flex items-center gap-2.5">
@@ -207,7 +272,7 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 space-y-0.5 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-0.5">
           <p className="px-2 py-2 text-[11px] font-semibold uppercase tracking-widest text-gray-600">
             Recent Chats
           </p>
@@ -259,7 +324,7 @@ const Dashboard = () => {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {user?.name || user?.username || "User"}
+                {displayName}
               </p>
               <p className="text-[11px] text-gray-500 truncate">{user?.email || ""}</p>
             </div>
@@ -270,7 +335,7 @@ const Dashboard = () => {
       <main className="flex flex-col flex-1 min-w-0">
         <header
           className="flex items-center gap-3 px-6 py-4 border-b border-white/[0.06] flex-shrink-0"
-          style={{ background: "#0e0e12" }}
+          style={{ background: "#06070b" }}
         >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -294,11 +359,11 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6 space-y-6">
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.length === 0 && !isLoading && (
-              <div className="py-24 text-center">
-                <div className="w-12 h-12 mx-auto mb-4">
+              <div className="py-12 text-center">
+                <div className="w-10 h-10 mx-auto mb-3">
                   <BOT_ICON />
                 </div>
                 <h1 className="text-xl font-semibold text-white">Ask anything</h1>
@@ -312,11 +377,11 @@ const Dashboard = () => {
               message.role === "user" ? (
                 <div className="flex justify-end" key={message._id || `${message.role}-${index}`}>
                   <div
-                    className="max-w-lg px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-white"
-                    style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
+                    className="max-w-lg px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-gray-100"
+                    style={{ background: "#1a1a24", border: "1px solid rgba(255,255,255,0.06)" }}
                   >
                     <p className="whitespace-pre-wrap">{message.text}</p>
-                    <p className="text-right text-[11px] text-purple-200/60 mt-1.5">
+                    <p className="text-right text-[11px] text-gray-500 mt-1.5">
                       {formatMessageTime(message.createdAt)}
                     </p>
                   </div>
@@ -327,10 +392,10 @@ const Dashboard = () => {
                     <BOT_ICON />
                   </div>
                   <div
-                    className="flex-1 rounded-2xl rounded-tl-sm px-5 py-4 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed"
-                    style={{ background: "#1a1a24", border: "1px solid rgba(255,255,255,0.06)" }}
+                    className="flex-1 rounded-2xl rounded-tl-sm px-1 py-1 text-sm text-gray-300 leading-relaxed"
+                    style={{ background: "transparent", border: "none" }}
                   >
-                    {message.text}
+                    <MarkdownResponse>{message.text}</MarkdownResponse>
                     <MessageActions />
                   </div>
                 </div>
@@ -351,22 +416,34 @@ const Dashboard = () => {
           <div ref={bottomRef} />
         </div>
 
-        <div
-          className="px-6 py-4 border-t border-white/[0.06] flex-shrink-0"
-          style={{ background: "#0e0e12" }}
-        >
+        <div className="px-6 pb-3 pt-1 flex-shrink-0" style={{ background: "#06070b" }}>
           <div className="max-w-3xl mx-auto">
             <div
-              className="flex flex-col rounded-2xl overflow-hidden"
-              style={{ background: "#1a1a24", border: "1px solid rgba(255,255,255,0.08)" }}
+              className="flex items-end gap-2 rounded-2xl px-2 py-2"
+              style={{ background: "#11121a", border: "1px solid rgba(255,255,255,0.08)" }}
             >
+              <button className="p-2 rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
               <textarea
                 rows={1}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="Type your message..."
-                className="w-full bg-transparent text-gray-200 placeholder-gray-600 text-sm px-4 pt-3.5 pb-2 resize-none outline-none leading-relaxed"
-                style={{ minHeight: "48px", maxHeight: "160px" }}
+                className="flex-1 bg-transparent text-gray-200 placeholder-gray-600 text-sm px-1 py-2 resize-none outline-none leading-relaxed no-scrollbar"
+                style={{ minHeight: "40px", maxHeight: "120px" }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
@@ -374,69 +451,47 @@ const Dashboard = () => {
                   }
                 }}
               />
-              <div className="flex items-center justify-between px-3 pb-3 pt-1">
-                <div className="flex items-center gap-1">
-                  <button className="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button className="p-2 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path
-                        d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <button
-                  onClick={submitMessage}
-                  disabled={!input.trim() || isLoading}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 ${
-                    input.trim() && !isLoading
-                      ? "text-white shadow-lg hover:opacity-90 active:scale-95"
-                      : "text-gray-600 cursor-not-allowed"
-                  }`}
-                  style={
-                    input.trim() && !isLoading
-                      ? { background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }
-                      : { background: "#2a2a35" }
-                  }
+              <button className="p-2 rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
+                  <circle cx="12" cy="12" r="10" />
+                  <path
+                    d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={submitMessage}
+                disabled={!input.trim() || isLoading}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 ${
+                  input.trim() && !isLoading
+                    ? "text-white shadow-lg hover:opacity-90 active:scale-95"
+                    : "text-gray-600 cursor-not-allowed"
+                }`}
+                style={
+                  input.trim() && !isLoading
+                    ? { background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }
+                    : { background: "#242631" }
+                }
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
-            <p className="text-center text-[11px] text-gray-700 mt-2.5">
-              TalkAI can make mistakes. Consider checking important information.
-            </p>
           </div>
         </div>
       </main>

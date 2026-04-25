@@ -27,7 +27,8 @@ export const useAuth = () => {
     const login = async (email , password) => {
         dispatch(setLoading(true));
         try {
-            const user = await loginApi(email , password);
+            const data = await loginApi(email , password);
+            const user = data?.user || data;
             dispatch(setUser(user));
             return user;
         } catch (error) {
@@ -38,11 +39,19 @@ export const useAuth = () => {
         }
     } 
 
+  const getUser = async () => {
+      const data = await getme();
+     dispatch(setUser(data.user));
+  }
+
+
+
 
     const fetchCurrentUser = async () => {
         dispatch(setLoading(true)); 
         try {
-            const user = await getme();
+            const data = await getme();
+            const user = data?.user || data;
             dispatch(setUser(user));
             dispatch(setError(null));
             return user;
@@ -62,6 +71,6 @@ export const useAuth = () => {
         }
     }
 
-    return { registerUser , login , fetchCurrentUser };
+    return { registerUser , login , fetchCurrentUser , setUser , setLoading , setError };
 
 }
