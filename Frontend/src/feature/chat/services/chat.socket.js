@@ -40,3 +40,8 @@ export const disconnectSocket = () => {
 export const sendMessage = (message) => {
   socket.emit("message", message);
 };
+
+export const streamChatMessage = ({ message, chatId }) => {
+  connectSocket();
+  socket.emit("chat:stream", { message, chatId });
+};

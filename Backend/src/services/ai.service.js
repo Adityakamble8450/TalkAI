@@ -106,6 +106,75 @@ export const getResponse = async (userMessages) => {
   return getMessageText(response);
 }
 
+const resolveToolCalls = async (conversation) => {
+  let response = await geminiModelWithTools.invoke(conversation);
+
+  for (let i = 0; i < 3 && response.tool_calls?.length; i += 1) {
+    const toolMessages = await Promise.all(
+      response.tool_calls.map(async (toolCall, index) => {
+        const toolCallId = toolCall.id || `${toolCall.name}-${i}-${index}`;
+
+        if (toolCall.name !== searchTool.name) {
+          return new ToolMessage({
+            content: `Unknown tool: ${toolCall.name}`,
+            tool_call_id: toolCallId,
+            status: "error",
+          });
+        }
+
+        try {
+          const result = await searchTool.invoke(toolCall.args);
+          return new ToolMessage({
+            content: typeof result === "string" ? result : JSON.stringify(result),
+            tool_call_id: toolCallId,
+            status: "success",
+          });
+        } catch (error) {
+          return new ToolMessage({
+            content: error.message || "Search failed",
+            tool_call_id: toolCallId,
+            status: "error",
+          });
+        }
+      })
+    );
+
+    conversation.push(response, ...toolMessages);
+    response = await geminiModelWithTools.invoke(conversation);
+  }
+
+  return conversation;
+};
+
+export const streamResponse = async (userMessages, onToken) => {
+  const messages = Array.isArray(userMessages)
+    ? userMessages
+        .map((msg) => {
+          if (msg.role === "user") {
+            return new HumanMessage(msg.text);
+          }
+          if (msg.role === "assistant") {
+            return new AIMessage(msg.text);
+          }
+          return null;
+        })
+        .filter(Boolean)
+    : [new HumanMessage(userMessages)];
+
+  const conversation = await resolveToolCalls([answerSystemPrompt, ...messages]);
+  let finalText = "";
+
+  for await (const chunk of await geminiModel.stream(conversation)) {
+    const token = getMessageText(chunk);
+    if (!token) continue;
+
+    finalText += token;
+    await onToken(token);
+  }
+
+  return finalText;
+};
+
 export const genrateTitle = async (userMessage) => {
   const response = await mistralModel.invoke([ new SystemMessage("You are a helpful assistant that generates concise and relevant titles for user queries."), new HumanMessage(`Generate a concise and relevant title for the following user query: "${userMessage}"`)]);
   return getMessageText(response)

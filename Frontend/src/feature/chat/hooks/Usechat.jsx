@@ -1,12 +1,14 @@
-import { connectSocket, disconnectSocket } from "../services/chat.socket";
+import { connectSocket, disconnectSocket, socket, streamChatMessage } from "../services/chat.socket";
 import {
-  createChat,
   getChatList,
   getChatMessages,
   deleteChat,
 } from "../services/chat.api";
 import {
   removeChat,
+  appendAssistantChunk,
+  appendChatMessage,
+  finishAssistantMessage,
   setChatMessages,
   setChats,
   setCurrentChatId,
@@ -15,6 +17,7 @@ import {
   upsertChat,
 } from "../chat.slice";
 import { useCallback } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 
@@ -24,6 +27,43 @@ export const useChat = () => {
 
   const getErrorMessage = (error) =>
     error?.response?.data?.error || error?.response?.data?.message || error.message;
+
+  useEffect(() => {
+    const handleStreamStart = ({ chat, userMessage, assistantMessage }) => {
+      dispatch(upsertChat(chat));
+      dispatch(setCurrentChatId(chat._id));
+      dispatch(appendChatMessage({ chatId: chat._id, message: userMessage }));
+      dispatch(appendChatMessage({ chatId: chat._id, message: assistantMessage }));
+      dispatch(setError(null));
+    };
+
+    const handleStreamChunk = ({ chatId, chunk }) => {
+      dispatch(appendAssistantChunk({ chatId, chunk }));
+    };
+
+    const handleStreamEnd = ({ chatId, assistantMessage }) => {
+      dispatch(finishAssistantMessage({ chatId, assistantMessage }));
+      dispatch(setIsLoading(false));
+      dispatch(setError(null));
+    };
+
+    const handleStreamError = ({ error }) => {
+      dispatch(setError(error || "Failed to stream response"));
+      dispatch(setIsLoading(false));
+    };
+
+    socket.on("chat:stream:start", handleStreamStart);
+    socket.on("chat:stream:chunk", handleStreamChunk);
+    socket.on("chat:stream:end", handleStreamEnd);
+    socket.on("chat:stream:error", handleStreamError);
+
+    return () => {
+      socket.off("chat:stream:start", handleStreamStart);
+      socket.off("chat:stream:chunk", handleStreamChunk);
+      socket.off("chat:stream:end", handleStreamEnd);
+      socket.off("chat:stream:error", handleStreamError);
+    };
+  }, [dispatch]);
 
   const loadChatList = useCallback(async () => {
     dispatch(setIsLoading(true));
@@ -73,27 +113,16 @@ export const useChat = () => {
 
       dispatch(setIsLoading(true));
       try {
-        const data = await createChat({ message: trimmedMessage, chatId });
-        const { chat, aiResponse, messages } = data;
-        const nextMessages = [
-          ...(chats[chat._id]?.messages || []),
-          messages,
-          aiResponse,
-        ].filter(Boolean);
-
-        dispatch(upsertChat({ ...chat, messages: nextMessages }));
-        dispatch(setCurrentChatId(chat._id));
+        streamChatMessage({ message: trimmedMessage, chatId });
         dispatch(setError(null));
-        connectSocket();
-        return data;
+        return { message: trimmedMessage, chatId };
       } catch (error) {
         dispatch(setError(getErrorMessage(error)));
-        throw error;
-      } finally {
         dispatch(setIsLoading(false));
+        throw error;
       }
     },
-    [chats, dispatch]
+    [dispatch]
   );
 
   const handleDeleteChat = useCallback(
