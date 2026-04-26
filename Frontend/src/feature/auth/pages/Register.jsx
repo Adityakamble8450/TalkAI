@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router";
+import { useAuth } from "../hook/UseAuth";
+import { useNavigate } from "react-router";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +10,9 @@ const Register = () => {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const {registerUser} = useAuth()
+  const navigate = useNavigate()
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -60,8 +65,21 @@ const Register = () => {
     };
   }, [formData.password]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitError("");
+
+    try {
+      await registerUser(formData.username , formData.email, formData.password);
+      navigate("/login", {
+        state: {
+          message: "Account created successfully. Please login to continue.",
+        },
+      });
+    } catch (error) {
+      console.error("register failed:", error);
+      setSubmitError(error?.message || "Unable to register.");
+    }
   };
 
   return (
@@ -260,6 +278,12 @@ const Register = () => {
                 <p className={`text-xs ${passwordStrength.text}`}>{passwordStrength.label}</p>
               </div>
             </div>
+
+            {submitError && (
+              <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4">
+                <p className="text-sm font-medium text-rose-300">{submitError}</p>
+              </div>
+            )}
 
             <button
               type="submit"

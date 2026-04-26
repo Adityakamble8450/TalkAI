@@ -22,3 +22,18 @@ export const getme = async () =>{
     return response.data;
 }
 
+export const verifyEmail = async (email, code) => {
+    const response = await api.post('/api/auth/verify-email', { email, code });
+    return response.data;
+}
+
+export const resendVerificationEmail = async (email) => {
+    const response = await api.post('/api/auth/resend-verification', { email });
+    return response.data;
+
+}
+
+export const logout = async () => {
+    const response = await api.post('/api/auth/logout');
+    return response.data;
+}

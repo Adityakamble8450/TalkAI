@@ -4,6 +4,7 @@ import { useAuth } from "../hook/UseAuth";
 import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router";
+import { useLocation } from "react-router";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const currentUser = useSelector((state) => state.auth.user);
+  const location = useLocation();
+  const successMessage = location.state?.message || "";
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -223,6 +226,10 @@ const Login = () => {
             >
               Login
             </button>
+
+            {successMessage ? (
+              <p className="text-sm text-emerald-300">{successMessage}</p>
+            ) : null}
 
             {submitError ? (
               <p className="text-sm text-rose-300">{submitError}</p>

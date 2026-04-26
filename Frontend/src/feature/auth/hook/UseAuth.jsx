@@ -4,6 +4,9 @@ import {
   register as registerApi,
   login as loginApi,
   getme,
+  verifyEmail as verifyEmailApi,
+  resendVerificationEmail as resendVerificationEmailApi,
+  logout,
 } from "../services/auth.api";
 
 export const useAuth = () => {
@@ -71,6 +74,50 @@ export const useAuth = () => {
         }
     }
 
-    return { registerUser , login , fetchCurrentUser , setUser , setLoading , setError };
+    const verifyEmail = async (email, code) => {
+        dispatch(setLoading(true));
+        try {
+            const data = await verifyEmailApi(email, code);
+            dispatch(setError(null));
+            return data;
+        } catch (error) {
+            dispatch(setError(error.message));
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
+    const resendVerificationEmail = async (email) => {
+        dispatch(setLoading(true));
+        try {
+            const data = await resendVerificationEmailApi(email);
+            dispatch(setError(null));
+            return data;
+        } catch (error) {
+            dispatch(setError(error.message));
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        } 
+
+
+    }
+
+    const handleLogout = async () => {
+        dispatch(setLoading(true));
+        try {
+            await logout();
+            dispatch(setUser(null));
+            dispatch(setError(null));
+        } catch (error) {
+            dispatch(setError(error.message));
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
+    return { registerUser , login , fetchCurrentUser , setUser , setLoading , setError , verifyEmail , resendVerificationEmail , handleLogout };
 
 }

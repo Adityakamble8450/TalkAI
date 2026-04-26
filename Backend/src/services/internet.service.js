@@ -8,7 +8,7 @@ export const getInternetData = async ({ query }) => {
     try {
         const result = await tavily.search(query, {
             numResults: 5,
-            searchDepth: 'basic',
+            searchDepth: "advanced",
             includeSummary: true,
         });
         console.log("Internet data fetched successfully:", JSON.stringify(result));

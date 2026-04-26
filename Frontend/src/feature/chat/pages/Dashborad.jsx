@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../auth/hook/UseAuth";
 import { useChat } from "../hooks/Usechat";
 
 const BOT_ICON = () => (
@@ -163,6 +165,8 @@ const MarkdownResponse = ({ children }) => (
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { chats, currentChatId, error, isLoading } = useSelector((state) => state.chat);
+  const navigate = useNavigate();
+  const { handleLogout } = useAuth();
   const {
     connectSocket,
     disconnectSocket,
@@ -209,6 +213,12 @@ const Dashboard = () => {
     } catch {
       setInput(message);
     }
+  };
+
+  const handleDashboardLogout = async () => {
+    await handleLogout();
+    disconnectSocket();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -315,19 +325,41 @@ const Dashboard = () => {
         </div>
 
         <div className="px-4 py-4 border-t border-white/[0.06]">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 px-2 py-2 rounded-xl min-w-0 flex-1">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+              >
+                {initials || "U"}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {displayName}
+                </p>
+                <p className="text-[11px] text-gray-500 truncate">{user?.email || ""}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleDashboardLogout}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              title="Logout"
             >
-              {initials || "U"}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {displayName}
-              </p>
-              <p className="text-[11px] text-gray-500 truncate">{user?.email || ""}</p>
-            </div>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M15 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3M10 17l5-5-5-5M15 12H3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Logout
+            </button>
           </div>
         </div>
       </aside>
