@@ -21,66 +21,58 @@ const BOT_ICON = () => (
   </svg>
 );
 
-const MessageActions = () => (
-  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
-    {[
-      {
-        label: "Copy",
-        icon: (
-          <path
-            d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2v-2M8 4h8a2 2 0 012 2v8M8 4a2 2 0 012-2h2a2 2 0 012 2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ),
-      },
-      {
-        label: "Like",
-        icon: (
-          <path
-            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017a2 2 0 01-1.789-1.106L7 14H4a1 1 0 01-1-1V9a1 1 0 011-1h2.5l3-5a1 1 0 011.5.87V10z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ),
-      },
-      {
-        label: "Dislike",
-        icon: (
-          <path
-            d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 011.789 1.106L17 10h2.764a1 1 0 011 1v4a1 1 0 01-1 1H17l-3 5a1 1 0 01-1.5-.87V14z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ),
-      },
-      {
-        label: "Read",
-        icon: (
-          <path
-            d="M15.536 8.464a5 5 0 010 7.072M12 6a8 8 0 010 12M8.464 8.464a5 5 0 000 7.072"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ),
-      },
-    ].map(({ label, icon }) => (
-      <button
-        key={label}
-        title={label}
-        className="text-gray-500 hover:text-purple-400 transition-colors duration-150 p-1 rounded"
+const LoadingMessage = () => (
+  <div className="flex items-start gap-2.5 sm:gap-3">
+    <div className="mt-0.5 h-8 w-8 flex-shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
+      <BOT_ICON />
+    </div>
+    <div className="min-w-0 flex-1 rounded-[24px] rounded-tl-sm border border-white/8 bg-white/[0.025] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.75)] animate-pulse" />
+        <p className="text-sm font-medium text-white">Thinking</p>
+        <span className="text-xs tracking-[0.24em] text-gray-500">LIVE</span>
+      </div>
+
+      <div className="space-y-2.5">
+        <div className="h-2 rounded-full bg-white/6">
+          <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-violet-500/70 via-fuchsia-400/70 to-transparent" />
+        </div>
+        <div className="h-2 rounded-full bg-white/6">
+          <div className="h-full w-5/6 animate-pulse rounded-full bg-gradient-to-r from-white/20 via-violet-400/50 to-transparent" />
+        </div>
+        <div className="flex items-center gap-1 pt-1">
+          <span className="h-2 w-2 animate-bounce rounded-full bg-violet-300 [animation-delay:-0.2s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400 [animation-delay:-0.1s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-violet-500" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const MessageActions = ({ onCopy, copied }) => (
+  <div className="mt-3 flex items-center border-t border-white/5 pt-3">
+    <button
+      type="button"
+      onClick={onCopy}
+      title="Copy message"
+      className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 transition-colors duration-150 hover:border-purple-400/40 hover:text-purple-300"
+    >
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        viewBox="0 0 24 24"
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          viewBox="0 0 24 24"
-        >
-          {icon}
-        </svg>
-      </button>
-    ))}
+        <path
+          d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2v-2M8 4h8a2 2 0 012 2v8M8 4a2 2 0 012-2h2a2 2 0 012 2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {copied ? "Copied" : "Copy"}
+    </button>
   </div>
 );
 
@@ -176,7 +168,10 @@ const Dashboard = () => {
     startNewChat,
   } = useChat();
   const [input, setInput] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window === "undefined" ? true : window.innerWidth >= 1024
+  );
+  const [copiedMessageId, setCopiedMessageId] = useState(null);
   const bottomRef = useRef(null);
 
   const recentChats = Object.values(chats).sort(
@@ -194,6 +189,15 @@ const Dashboard = () => {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, isLoading]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarOpen(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const displayName = user?.name || user?.username || user?.email?.split("@")[0] || "User";
 
@@ -221,21 +225,50 @@ const Dashboard = () => {
     navigate("/login", { replace: true });
   };
 
+  const handleSelectChat = (chatId) => {
+    loadChatMessages(chatId).catch(() => {});
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const handleCopyMessage = async (messageId, text) => {
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(messageId);
+      window.setTimeout(() => {
+        setCopiedMessageId((current) => (current === messageId ? null : current));
+      }, 2000);
+    } catch (copyError) {
+      console.error("Failed to copy message:", copyError);
+    }
+  };
+
   return (
     <div
-      className="flex h-screen w-screen overflow-hidden font-sans antialiased"
+      className="relative flex h-svh w-full overflow-hidden font-sans antialiased"
       style={{
         background: "#06070b",
         fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
       }}
     >
+      <div
+        aria-hidden={!sidebarOpen}
+        className={`absolute inset-0 z-20 bg-black/60 transition-opacity duration-300 lg:hidden ${
+          sidebarOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
       <aside
-        className={`flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out border-r border-white/[0.06] ${
-          sidebarOpen ? "w-72" : "w-0 overflow-hidden"
+        className={`absolute inset-y-0 left-0 z-30 flex w-[min(82vw,18rem)] max-w-[18rem] flex-col border-r border-white/[0.06] transition-transform duration-300 ease-in-out lg:static lg:z-0 lg:w-72 lg:max-w-none lg:flex-shrink-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
         style={{ background: "#090a10" }}
       >
-        <div className="flex items-center justify-between px-5 py-5">
+        <div className="flex items-center justify-between px-4 py-4 sm:px-5 sm:py-5">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8">
               <BOT_ICON />
@@ -265,8 +298,11 @@ const Dashboard = () => {
             onClick={() => {
               setInput("");
               startNewChat();
+              if (window.innerWidth < 1024) {
+                setSidebarOpen(false);
+              }
             }}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}
           >
             <svg
@@ -282,7 +318,7 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-0.5">
+        <div className="no-scrollbar flex-1 space-y-0.5 overflow-y-auto px-3">
           <p className="px-2 py-2 text-[11px] font-semibold uppercase tracking-widest text-gray-600">
             Recent Chats
           </p>
@@ -292,8 +328,8 @@ const Dashboard = () => {
           {recentChats.map((chat) => (
             <button
               key={chat._id}
-              onClick={() => loadChatMessages(chat._id).catch(() => {})}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all duration-150 group ${
+              onClick={() => handleSelectChat(chat._id)}
+              className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-all duration-150 ${
                 currentChatId === chat._id
                   ? "bg-purple-600/15 text-white"
                   : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
@@ -324,9 +360,9 @@ const Dashboard = () => {
           ))}
         </div>
 
-        <div className="px-4 py-4 border-t border-white/[0.06]">
+        <div className="border-t border-white/[0.06] px-4 py-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 px-2 py-2 rounded-xl min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                 style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
@@ -342,7 +378,7 @@ const Dashboard = () => {
             </div>
             <button
               onClick={handleDashboardLogout}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
               title="Logout"
             >
               <svg
@@ -364,14 +400,14 @@ const Dashboard = () => {
         </div>
       </aside>
 
-      <main className="flex flex-col flex-1 min-w-0">
+      <main className="flex min-w-0 flex-1 flex-col">
         <header
-          className="flex items-center gap-3 px-6 py-4 border-b border-white/[0.06] flex-shrink-0"
+          className="sticky top-0 z-10 flex flex-shrink-0 items-center gap-3 border-b border-white/[0.06] px-4 py-4 sm:px-6"
           style={{ background: "#06070b" }}
         >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-gray-500 hover:text-gray-300 transition-colors p-1"
+            className="rounded p-1 text-gray-500 transition-colors hover:text-gray-300"
           >
             <svg
               className="w-5 h-5"
@@ -391,11 +427,11 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6 space-y-6">
-          <div className="max-w-3xl mx-auto space-y-6">
+        <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+          <div className="mx-auto max-w-3xl space-y-5 sm:space-y-6">
             {messages.length === 0 && !isLoading && (
-              <div className="py-12 text-center">
-                <div className="w-10 h-10 mx-auto mb-3">
+              <div className="py-10 text-center sm:py-12">
+                <div className="mx-auto mb-3 h-10 w-10">
                   <BOT_ICON />
                 </div>
                 <h1 className="text-xl font-semibold text-white">Ask anything</h1>
@@ -409,7 +445,7 @@ const Dashboard = () => {
               message.role === "user" ? (
                 <div className="flex justify-end" key={message._id || `${message.role}-${index}`}>
                   <div
-                    className="max-w-lg px-4 py-3 rounded-2xl rounded-tr-sm text-sm text-gray-100"
+                    className="max-w-[85%] rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-gray-100 sm:max-w-lg"
                     style={{ background: "#1a1a24", border: "1px solid rgba(255,255,255,0.06)" }}
                   >
                     <p className="whitespace-pre-wrap">{message.text}</p>
@@ -419,42 +455,43 @@ const Dashboard = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-3 items-start" key={message._id || `${message.role}-${index}`}>
-                  <div className="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden mt-0.5">
+                <div
+                  className="flex items-start gap-2.5 sm:gap-3"
+                  key={message._id || `${message.role}-${index}`}
+                >
+                  <div className="mt-0.5 h-8 w-8 flex-shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
                     <BOT_ICON />
                   </div>
                   <div
-                    className="flex-1 rounded-2xl rounded-tl-sm px-1 py-1 text-sm text-gray-300 leading-relaxed"
+                    className="min-w-0 flex-1 rounded-2xl rounded-tl-sm px-1 py-1 text-sm leading-relaxed text-gray-300"
                     style={{ background: "transparent", border: "none" }}
                   >
                     <MarkdownResponse>{message.text}</MarkdownResponse>
-                    <MessageActions />
+                    <MessageActions
+                      copied={copiedMessageId === (message._id || `${message.role}-${index}`)}
+                      onCopy={() =>
+                        handleCopyMessage(message._id || `${message.role}-${index}`, message.text)
+                      }
+                    />
                   </div>
                 </div>
               )
             )}
 
-            {isLoading && (
-              <div className="flex gap-3 items-center text-sm text-gray-500">
-                <div className="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden">
-                  <BOT_ICON />
-                </div>
-                Thinking...
-              </div>
-            )}
+            {isLoading && <LoadingMessage />}
 
             {error && <p className="text-sm text-red-400 text-center">{error}</p>}
           </div>
           <div ref={bottomRef} />
         </div>
 
-        <div className="px-6 pb-3 pt-1 flex-shrink-0" style={{ background: "#06070b" }}>
-          <div className="max-w-3xl mx-auto">
+        <div className="flex-shrink-0 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pb-4" style={{ background: "#06070b" }}>
+          <div className="mx-auto max-w-3xl">
             <div
-              className="flex items-end gap-2 rounded-2xl px-2 py-2"
+              className="flex items-end gap-1.5 rounded-2xl px-2 py-2 sm:gap-2"
               style={{ background: "#11121a", border: "1px solid rgba(255,255,255,0.08)" }}
             >
-              <button className="p-2 rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
+              <button className="rounded-xl p-2 text-gray-500 transition-all hover:bg-white/5 hover:text-gray-300">
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -474,7 +511,7 @@ const Dashboard = () => {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 bg-transparent text-gray-200 placeholder-gray-600 text-sm px-1 py-2 resize-none outline-none leading-relaxed no-scrollbar"
+                className="no-scrollbar flex-1 resize-none bg-transparent px-1 py-2 text-sm leading-relaxed text-gray-200 outline-none placeholder:text-gray-600"
                 style={{ minHeight: "40px", maxHeight: "120px" }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
@@ -483,7 +520,7 @@ const Dashboard = () => {
                   }
                 }}
               />
-              <button className="p-2 rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
+              <button className="hidden rounded-xl p-2 text-gray-500 transition-all hover:bg-white/5 hover:text-gray-300 sm:block">
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -502,7 +539,7 @@ const Dashboard = () => {
               <button
                 onClick={submitMessage}
                 disabled={!input.trim() || isLoading}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-150 ${
                   input.trim() && !isLoading
                     ? "text-white shadow-lg hover:opacity-90 active:scale-95"
                     : "text-gray-600 cursor-not-allowed"
