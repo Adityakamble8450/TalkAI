@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="talkai-bg" x1="12" x2="52" y1="8" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b5cf6" />
+      <stop offset="1" stop-color="#4f46e5" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="#0b0d14" />
+  <rect x="10" y="10" width="44" height="36" rx="14" fill="url(#talkai-bg)" />
+  <circle cx="24" cy="28" r="4" fill="#f5f3ff" />
+  <circle cx="40" cy="28" r="4" fill="#f5f3ff" />
+  <path d="M23 39c2.5 2 5.6 3 9 3s6.5-1 9-3" fill="none" stroke="#f5f3ff" stroke-linecap="round" stroke-width="3" />
+  <path d="M23 10v-4m18 4v-4" fill="none" stroke="#8b5cf6" stroke-linecap="round" stroke-width="4" />
+  <path d="M24 46H17l5 8 9-8Z" fill="url(#talkai-bg)" />
+</svg>

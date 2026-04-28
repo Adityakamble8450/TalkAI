@@ -5,6 +5,7 @@ import messageModel from "../model/message.model.js";
 import { genrateTitle, streamResponse } from "../services/ai.service.js";
 
 let io = null;
+const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
 const parseCookies = (cookieHeader = "") =>
   cookieHeader.split(";").reduce((cookies, cookie) => {
@@ -106,7 +107,7 @@ export const initSocketServer = (server) => {
   }
 
   io = new Server(server, {
-    cors: { origin: "http://localhost:5173", credentials: true },
+    cors: { origin: clientOrigin, credentials: true },
   });
   io.use(authenticateSocket);
 
